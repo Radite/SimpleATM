@@ -3,7 +3,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         ATM atm = new ATM();
-        Scanner scanner = new Scanner(System.in); // Initialize the scanner outside the loop
+        Scanner scanner = new Scanner(System.in); 
 
         while (true) {
             System.out.println("\nWelcome to the ATM System");
@@ -13,7 +13,7 @@ public class Main {
             System.out.print("Please choose an option: ");
 
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume the newline character
+            scanner.nextLine(); 
 
             switch (choice) {
                 case 1:
@@ -26,8 +26,8 @@ public class Main {
                     break;
                 case 3:
                     System.out.println("Exiting the ATM system. Thank you for using our service.");
-                    scanner.close(); // Close the scanner when we're done with it
-                    return; // Exit the loop (and the program)
+                    scanner.close(); 
+                    return;
                 default:
                     System.out.println("Invalid option. Please try again.");
                     break;

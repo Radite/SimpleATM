@@ -25,55 +25,63 @@ public class ATM {
 
     // Log-in functionality
     public boolean login() {
-        System.out.print("Enter your account number: ");
-        String accountNumber = scanner.next();
-        System.out.print("Enter your PIN: ");
-        int pin = scanner.nextInt();
+        boolean loginSuccessful = false;
+        while (!loginSuccessful) {
+            System.out.print("Enter your account number: ");
+            String accountNumber = scanner.next();
+            File accountFile = new File(accountNumber + ".txt");
 
-        Integer securityCode = null;  // Initialize securityCode as null
+            // Check if the account file exists
+            if (!accountFile.exists()) {
+                System.out.println("Error: Account number does not exist. Please try again.");
+                continue; // Continue will restart the loop, prompting for the account number again
+            }
 
-        // Attempt to retrieve the user information from a file
-        try (BufferedReader reader = new BufferedReader(new FileReader(accountNumber + ".txt"))) {
-            String line;
-            String fileAccountNumber = null;
-            int filePin = 0;
-            double balance = 0.0;
+            System.out.print("Enter your PIN: ");
+            int pin = scanner.nextInt();
 
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(": ");
-                switch (parts[0]) {
-                    case "Account Number":
-                        fileAccountNumber = parts[1].trim();
-                        break;
-                    case "PIN":
-                        filePin = Integer.parseInt(parts[1].trim());
-                        break;
-                    case "Balance":
-                        balance = Double.parseDouble(parts[1].trim());
-                        break;
-                    case "Secure Token":
-                        securityCode = Integer.parseInt(parts[1].trim());  // Parse and store the secure token
-                        break;
+            // Since the account file exists, proceed to load the account data
+            try (BufferedReader reader = new BufferedReader(new FileReader(accountFile))) {
+                String line;
+                String fileAccountNumber = null;
+                int filePin = 0;
+                double balance = 0.0;
+                Integer securityCode = null;
+
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(": ");
+                    switch (parts[0]) {
+                        case "Account Number":
+                            fileAccountNumber = parts[1].trim();
+                            break;
+                        case "PIN":
+                            filePin = Integer.parseInt(parts[1].trim());
+                            break;
+                        case "Balance":
+                            balance = Double.parseDouble(parts[1].trim());
+                            break;
+                        case "Secure Token":
+                            securityCode = Integer.parseInt(parts[1].trim());
+                            break;
+                    }
                 }
-            }
 
-            // Now check if the account number and PIN match what was loaded
-            if (accountNumber.equals(fileAccountNumber) && pin == filePin) {
-                // Create a User object with the loaded data, including the secureToken
-                User user = new User(fileAccountNumber, filePin, balance, securityCode);
-                userMap.put(accountNumber, user);  // Store the user in the map
-                this.currentAccountNumber = accountNumber; // Set the current account number
-                System.out.println("Login successful.");
-                return true;
-            } else {
-                System.out.println("Login failed. Incorrect account number or PIN.");
-                return false;
+                // Check if the account number and PIN match what was loaded
+                if (accountNumber.equals(fileAccountNumber) && pin == filePin) {
+                    User user = new User(fileAccountNumber, filePin, balance, securityCode);
+                    userMap.put(accountNumber, user);
+                    this.currentAccountNumber = accountNumber;
+                    System.out.println("Login successful.");
+                    loginSuccessful = true;
+                } else {
+                    System.out.println("Login failed. Incorrect PIN. Please try again.");
+                }
+            } catch (IOException e) {
+                System.out.println("An error occurred while trying to login.");
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            System.out.println("An error occurred while trying to login.");
-            e.printStackTrace();
-            return false;
         }
+        return loginSuccessful;
     }
 
     public void setupAccount() {
