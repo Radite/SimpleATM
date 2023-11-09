@@ -1,6 +1,7 @@
 import java.util.Scanner;
 import java.util.UUID;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -76,7 +77,14 @@ public class ATM {
         String accountNumberInput = scanner.nextLine();
         String accountNumber = accountNumberInput.isEmpty() ? UUID.randomUUID().toString() : accountNumberInput;
 
-        System.out.print("Enter a new PIN: ");
+        // Check if a file for the account number already exists
+        File file = new File(accountNumber + ".txt");
+        if (file.exists()) {
+            System.out.println("Error: An account with this number already exists.");
+            return; // Exit the method to prevent overwriting the existing account
+        }
+        
+        System.out.print("Enter a new 4-Digit PIN: ");
         int pin = scanner.nextInt();
         scanner.nextLine(); // Consume the newline left-over
 
@@ -84,6 +92,8 @@ public class ATM {
         newUser.saveToFile();
 
         System.out.println("Account created successfully. Account Number: " + accountNumber);
+        System.out.println("Store your Secure Token safely: " + newUser.getSecureToken());
+
         // The account number will be needed for login, so it should be stored securely and provided to the user.
     }
 
@@ -133,7 +143,6 @@ public class ATM {
 
 private void performBalanceInquiry() {
         System.out.println("Your current balance is: " + account.checkBalance());
-        System.out.println(account.checkSecureToken());
     }
 
     private void performDeposit() {
