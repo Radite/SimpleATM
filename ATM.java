@@ -1,3 +1,4 @@
+import java.util.Random;
 import java.util.Scanner;
 import java.util.UUID;
 import java.io.BufferedReader;
@@ -7,16 +8,18 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class ATM {
     private Scanner scanner;
     private Account account; // This needs to be used after a successful login
     private Map<String, User> userMap; // To hold user data after login
     private String currentAccountNumber; // New field to keep track of the logged-in user's account number
-
+    private Random rand;
 
     public ATM() {
         this.scanner = new Scanner(System.in);
         this.userMap = new HashMap<>();
+        this.rand = new Random();
     }
 
     // Log-in functionality
@@ -73,20 +76,32 @@ public class ATM {
     }
 
     public void setupAccount() {
-        System.out.print("Enter a new account number or press Enter to generate one: ");
-        String accountNumberInput = scanner.nextLine();
-        String accountNumber = accountNumberInput.isEmpty() ? UUID.randomUUID().toString() : accountNumberInput;
+        String accountNumber;
+        File file;
 
-        // Check if a file for the account number already exists
-        File file = new File(accountNumber + ".txt");
-        if (file.exists()) {
-            System.out.println("Error: An account with this number already exists.");
-            return; // Exit the method to prevent overwriting the existing account
+        while (true) {
+            accountNumber = String.valueOf(100000 + rand.nextInt(900000));
+            file = new File(accountNumber + ".txt");
+
+            // If file does not exist, we've found a unique account number
+            if (!file.exists()) {
+                break;
+            }
+            // If the file exists, the loop will continue and generate a new number
         }
-        
+        int pin = 0;
+        while (true){
         System.out.print("Enter a new 4-Digit PIN: ");
-        int pin = scanner.nextInt();
+        pin = scanner.nextInt();
         scanner.nextLine(); // Consume the newline left-over
+        if (String.valueOf(pin).length() == 4) {
+            break;
+        } else {
+            System.out.println("Invalid PIN. The PIN must be exactly 4 digits.");
+        }
+    }
+
+        // Create a new User with the unique account number and 4-digit PIN
 
         User newUser = new User(accountNumber, pin, 0.0, null); // Start with a balance of 0.0
         newUser.saveToFile();
@@ -94,7 +109,6 @@ public class ATM {
         System.out.println("Account created successfully. Account Number: " + accountNumber);
         System.out.println("Store your Secure Token safely: " + newUser.getSecureToken());
 
-        // The account number will be needed for login, so it should be stored securely and provided to the user.
     }
 
 
