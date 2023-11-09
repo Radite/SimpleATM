@@ -1,4 +1,0 @@
-Account Number: 853744
-PIN: 2
-Balance: 0.0
-Secure Token: 315835

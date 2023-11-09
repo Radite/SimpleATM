@@ -9,21 +9,24 @@ import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.Map;
 
-
 public class ATM {
+    // Scanner to read user input and Random to generate random numbers or tokens
     private Scanner scanner;
-    private Account account; // This needs to be used after a successful login
-    private Map<String, User> userMap; // To hold user data after login
-    private String currentAccountNumber; // New field to keep track of the logged-in user's account number
     private Random rand;
 
+    // Account to represent the user's account, userMap to track logged-in users by account number
+    private Account account;
+    private Map<String, User> userMap;
+    private String currentAccountNumber; // Keep track of the currently logged-in user's account number
+
+    // Constructor initializes the scanner, the random object, and the userMap
     public ATM() {
         this.scanner = new Scanner(System.in);
-        this.userMap = new HashMap<>();
         this.rand = new Random();
+        this.userMap = new HashMap<>();
     }
 
-    // Log-in functionality
+    // Method for user login. It allows for multiple attempts until a successful login
     public boolean login() {
         boolean loginSuccessful = false;
         while (!loginSuccessful) {
@@ -31,43 +34,39 @@ public class ATM {
             String accountNumber = scanner.next();
             File accountFile = new File(accountNumber + ".txt");
 
-            // Check if the account file exists
+            // Check if an account file exists, otherwise prompt again
             if (!accountFile.exists()) {
                 System.out.println("Error: Account number does not exist. Please try again.");
-                continue; // Continue will restart the loop, prompting for the account number again
+                continue;
             }
 
             System.out.print("Enter your PIN: ");
             int pin = scanner.nextInt();
 
-            // Since the account file exists, proceed to load the account data
+            // Read account details from file and validate login credentials
             try (BufferedReader reader = new BufferedReader(new FileReader(accountFile))) {
+                // Variables to hold account details read from file
                 String line;
                 String fileAccountNumber = null;
                 int filePin = 0;
                 double balance = 0.0;
                 Integer securityCode = null;
 
+                // Parse the account file to extract account details
                 while ((line = reader.readLine()) != null) {
                     String[] parts = line.split(": ");
+                    // Switch case to assign values to variables based on the prefix
                     switch (parts[0]) {
-                        case "Account Number":
-                            fileAccountNumber = parts[1].trim();
-                            break;
-                        case "PIN":
-                            filePin = Integer.parseInt(parts[1].trim());
-                            break;
-                        case "Balance":
-                            balance = Double.parseDouble(parts[1].trim());
-                            break;
-                        case "Secure Token":
-                            securityCode = Integer.parseInt(parts[1].trim());
-                            break;
+                        case "Account Number": fileAccountNumber = parts[1].trim(); break;
+                        case "PIN": filePin = Integer.parseInt(parts[1].trim()); break;
+                        case "Balance": balance = Double.parseDouble(parts[1].trim()); break;
+                        case "Secure Token": securityCode = Integer.parseInt(parts[1].trim()); break;
                     }
                 }
 
-                // Check if the account number and PIN match what was loaded
+                // Validate the account number and PIN
                 if (accountNumber.equals(fileAccountNumber) && pin == filePin) {
+                    // If valid, create User object, update userMap and set currentAccountNumber
                     User user = new User(fileAccountNumber, filePin, balance, securityCode);
                     userMap.put(accountNumber, user);
                     this.currentAccountNumber = accountNumber;
@@ -84,53 +83,60 @@ public class ATM {
         return loginSuccessful;
     }
 
+    // Method to setup a new account with unique account number and 4-digit PIN
     public void setupAccount() {
+        // Variables for account number and file object
         String accountNumber;
         File file;
 
+        // Loop to ensure the generated account number is unique
         while (true) {
             accountNumber = String.valueOf(100000 + rand.nextInt(900000));
             file = new File(accountNumber + ".txt");
 
-            // If file does not exist, we've found a unique account number
+            // Break the loop if the generated account number doesn't already have an account file
             if (!file.exists()) {
                 break;
             }
-            // If the file exists, the loop will continue and generate a new number
         }
+
+        // Loop to ensure user enters a valid 4-digit PIN
         int pin = 0;
-        while (true){
-        System.out.print("Enter a new 4-Digit PIN: ");
-        pin = scanner.nextInt();
-        scanner.nextLine(); // Consume the newline left-over
-        if (String.valueOf(pin).length() == 4) {
-            break;
-        } else {
-            System.out.println("Invalid PIN. The PIN must be exactly 4 digits.");
+        while (true) {
+            System.out.print("Enter a new 4-Digit PIN: ");
+            pin = scanner.nextInt();
+            scanner.nextLine(); // Consume the newline left-over
+            if (String.valueOf(pin).length() == 4) {
+                break;
+            } else {
+                System.out.println("Invalid PIN. The PIN must be exactly 4 digits.");
+            }
         }
-    }
 
-        // Create a new User with the unique account number and 4-digit PIN
+        // Create a new User object with the account number and PIN
+        User newUser = new User(accountNumber, pin, 0.0, null);
+        newUser.saveToFile(); // Save user details to file
 
-        User newUser = new User(accountNumber, pin, 0.0, null); // Start with a balance of 0.0
-        newUser.saveToFile();
-
+        // Inform user of account creation and provide secure token
         System.out.println("Account created successfully. Account Number: " + accountNumber);
         System.out.println("Store your Secure Token safely: " + newUser.getSecureToken());
-
     }
 
-
+    // Method to display a menu of actions to the user
     public void showMenu() {
+        // Retrieve the logged-in user's details
         User loggedInUser = userMap.get(currentAccountNumber);
 
+        // If no user is logged in, exit the method
         if (loggedInUser == null) {
             System.out.println("Login session expired or invalid.");
             return;
         }
         
-        this.account = new Account(loggedInUser); // Set the account for the logged in user
+        // Associate the Account object with the logged-in User
+        this.account = new Account(loggedInUser);
 
+        // Loop to display the menu and process user actions
         while (true) {
             System.out.println("\nWelcome to the ATM. Please choose an operation:");
             System.out.println("1. Check Balance");
@@ -142,24 +148,14 @@ public class ATM {
 
             int choice = scanner.nextInt();
 
-            switch (choice){
-                case 1:
-                    performBalanceInquiry();
-                    break;
-                case 2:
-                    performDeposit();
-                    break;
-                case 3:
-                    performWithdrawal();
-                    break;
-                case 4:
-                    performPinChange();
-                    break;
-                case 5:
-                    System.out.println("Thank you for using the ATM. Goodbye!");
-                    return;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+            // Switch case to handle the chosen operation
+            switch (choice) {
+                case 1: performBalanceInquiry(); break;
+                case 2: performDeposit(); break;
+                case 3: performWithdrawal(); break;
+                case 4: performPinChange(); break;
+                case 5: System.out.println("Thank you for using the ATM. Goodbye!"); return;
+                default: System.out.println("Invalid option. Please try again."); break;
             }
         }
     }

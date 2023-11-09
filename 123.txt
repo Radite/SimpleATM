@@ -1,4 +1,0 @@
-Account Number: 123
-PIN: 12345
-Balance: 322.0
-Secure Token: 583185

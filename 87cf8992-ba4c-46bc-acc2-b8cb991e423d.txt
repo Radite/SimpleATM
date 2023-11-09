@@ -1,4 +1,0 @@
-Account Number: 87cf8992-ba4c-46bc-acc2-b8cb991e423d
-PIN: 123
-Balance: 0.0
-Secure Token: 207726

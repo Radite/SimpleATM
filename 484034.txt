@@ -1,4 +1,0 @@
-Account Number: 484034
-PIN: 2313
-Balance: 0.0
-Secure Token: 968060

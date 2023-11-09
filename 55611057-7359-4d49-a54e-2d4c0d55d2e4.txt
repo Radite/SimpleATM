@@ -1,4 +1,0 @@
-Account Number: 55611057-7359-4d49-a54e-2d4c0d55d2e4
-PIN: 2
-Balance: 0.0
-Secure Token: 528757

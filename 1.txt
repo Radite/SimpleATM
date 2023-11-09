@@ -1,4 +1,0 @@
-Account Number: 1
-PIN: 1111
-Balance: 0.0
-Secure Token: 751655
