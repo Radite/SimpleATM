@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.InputMismatchException;
 import java.util.Map;
 
 
@@ -155,43 +156,99 @@ public class ATM {
         }
     }
 
-private void performBalanceInquiry() {
+    private void performBalanceInquiry() {
         System.out.println("Your current balance is: " + account.checkBalance());
     }
 
-    private void performDeposit() {
+private void performDeposit() {
+    double amount;
+    while (true) {
         System.out.print("Enter amount to deposit: ");
-        double amount = scanner.nextDouble();
-        account.deposit(amount); // Call deposit on the account instance
+        try {
+            amount = scanner.nextDouble();
+            if (amount <= 0) {
+                System.out.println("The amount must be a positive number.");
+                continue;
+            }
+            break; // Exit loop if a valid amount is entered
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. You must enter a number.");
+            scanner.next(); // Clear the invalid input
+        }
     }
+    account.deposit(amount);
+}
 
-    private void performWithdrawal() {
+private void performWithdrawal() {
+    double amount;
+    while (true) {
         System.out.print("Enter amount to withdraw: ");
-        double amount = scanner.nextDouble();
-        if (account.withdraw(amount)) {
-            System.out.println("Withdrawal successful.");
-        } else {
-            System.out.println("Withdrawal failed.");
+        try {
+            amount = scanner.nextDouble();
+            if (amount <= 0) {
+                System.out.println("The amount must be a positive number.");
+                continue; // Continue will skip the rest of the loop and start over
+            }
+            // If the amount is positive, try to perform the withdrawal
+            if (account.withdraw(amount)) {
+                System.out.println("Withdrawal successful.");
+                break; // Break out of the loop if the withdrawal is successful
+            } else {
+                System.out.println("Withdrawal failed. Insufficient funds or error.");
+                break; // Break out of the loop if there's an error or insufficient funds
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. You must enter a number.");
+            scanner.next(); // Clear the scanner buffer
+        }
+    }
+}
+    
+
+private void performPinChange() {
+    int oldPin = 0, newPin = 0;
+    boolean validOldPin = false, validNewPin = false;
+    
+    // Validate old PIN
+    while (!validOldPin) {
+        System.out.print("Enter old PIN: ");
+        try {
+            oldPin = scanner.nextInt();
+            if (String.valueOf(oldPin).length() == 4) {
+                validOldPin = true;
+            } else {
+                System.out.println("The old PIN must be a 4-digit number.");
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. You must enter numbers only.");
+            scanner.next(); // Clear the scanner buffer
         }
     }
 
-private void performPinChange() {
-    System.out.print("Enter old PIN: ");
-    int oldPin = scanner.nextInt();
-    if (oldPin != account.checkPin()) {
-        System.out.println("Incorrect Pin");
-        return;
-        
+    // Validate new PIN
+    while (!validNewPin) {
+        System.out.print("Enter new PIN: ");
+        try {
+            newPin = scanner.nextInt();
+            if (String.valueOf(newPin).length() == 4) {
+                if (newPin != oldPin) {
+                    validNewPin = true;
+                } else {
+                    System.out.println("The new PIN cannot be the same as the old PIN.");
+                }
+            } else {
+                System.out.println("The new PIN must be a 4-digit number.");
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. You must enter numbers only.");
+            scanner.next(); // Clear the scanner buffer
+        }
     }
-    System.out.print("Enter new PIN: ");
-    int newPin = scanner.nextInt();
-    if (oldPin == newPin){
-        System.out.println("Old pin and new pin cannot be the same.");
-        return;
-    }
-    System.out.print("Enter secure token: ");
-    int secureToken = scanner.nextInt();
 
+    // Assuming you have a method to prompt for and validate the secure token
+    int secureToken = promptForSecureToken();
+
+    // Change PIN if old PIN and secure token are correct
     User currentUser = userMap.get(currentAccountNumber);
     if (currentUser != null && currentUser.verifySecureToken(secureToken)) {
         if (currentUser.getPin() == oldPin) { 
@@ -205,5 +262,20 @@ private void performPinChange() {
     } else {
         System.out.println("Invalid security code or user not found.");
     }
+}
+
+private int promptForSecureToken() {
+    int secureToken;
+    System.out.print("Enter secure token: ");
+    while (true) {
+        try {
+            secureToken = scanner.nextInt();
+            break; // Exit loop if input is an integer
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. The secure token must be numbers only.");
+            scanner.next(); // Clear the scanner buffer
+        }
+    }
+    return secureToken;
 }
 }
