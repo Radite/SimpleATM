@@ -7,13 +7,15 @@ class User {
     private String accountNumber;
     private int pin;
     private double balance;
-    private final int secureToken;
+    private int secureToken; // Make sure this is not final anymore
 
-    public User(String accountNumber, int pin, double balance) {
+    // Update the constructor to accept an Integer for the secureToken
+    public User(String accountNumber, int pin, double balance, Integer secureToken) {
         this.accountNumber = accountNumber;
         this.pin = pin;
         this.balance = balance;
-        this.secureToken = generateSecureToken(); // Generate token on construction
+        // If secureToken is null, generate a new one, otherwise use the provided one
+        this.secureToken = (secureToken != null) ? secureToken : generateSecureToken();
     }
 
     public String getAccountNumber(){
@@ -37,7 +39,7 @@ class User {
     }
     
     // This method generates a random 6-digit secure token
-    private int generateSecureToken() {
+    private static int generateSecureToken() {
         Random rand = new Random();
         return rand.nextInt(900000) + 100000;
     }
@@ -51,20 +53,22 @@ class User {
     }
 
     public void saveToFile() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(this.accountNumber + ".txt"))) {
+        String filename = this.accountNumber + ".txt";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
             writer.write("Account Number: " + this.accountNumber);
             writer.newLine();
-            writer.write("PIN: " + this.pin);
+            writer.write("PIN: " + this.pin); // Make sure this is writing the new PIN
             writer.newLine();
             writer.write("Balance: " + this.balance);
             writer.newLine();
-            writer.write("Secure Token: " + this.secureToken); // Corrected to secureToken
+            writer.write("Secure Token: " + this.secureToken);
         } catch (IOException e) {
-            System.out.println("An error occurred while saving user details.");
+            System.out.println("An error occurred while saving user details to " + filename);
             e.printStackTrace();
         }
     }
 }
+
 
 
 

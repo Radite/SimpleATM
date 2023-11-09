@@ -25,13 +25,14 @@ public class ATM {
         System.out.print("Enter your PIN: ");
         int pin = scanner.nextInt();
 
+        Integer securityCode = null;  // Initialize securityCode as null
+
         // Attempt to retrieve the user information from a file
         try (BufferedReader reader = new BufferedReader(new FileReader(accountNumber + ".txt"))) {
             String line;
             String fileAccountNumber = null;
             int filePin = 0;
             double balance = 0.0;
-            int securityCode = 0;
 
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(": ");
@@ -45,19 +46,19 @@ public class ATM {
                     case "Balance":
                         balance = Double.parseDouble(parts[1].trim());
                         break;
-                    case "Security Code":
-                        securityCode = Integer.parseInt(parts[1].trim());
+                    case "Secure Token":
+                        securityCode = Integer.parseInt(parts[1].trim());  // Parse and store the secure token
                         break;
                 }
             }
 
-            // Check if account number and PIN match
+            // Now check if the account number and PIN match what was loaded
             if (accountNumber.equals(fileAccountNumber) && pin == filePin) {
-                // User authenticated, create User object and store it in map
-                User user = new User(accountNumber, pin, balance);
-                userMap.put(accountNumber, user);
+                // Create a User object with the loaded data, including the secureToken
+                User user = new User(fileAccountNumber, filePin, balance, securityCode);
+                userMap.put(accountNumber, user);  // Store the user in the map
+                this.currentAccountNumber = accountNumber; // Set the current account number
                 System.out.println("Login successful.");
-                this.currentAccountNumber = accountNumber; // Store the logged-in user's account number
                 return true;
             } else {
                 System.out.println("Login failed. Incorrect account number or PIN.");
@@ -79,7 +80,7 @@ public class ATM {
         int pin = scanner.nextInt();
         scanner.nextLine(); // Consume the newline left-over
 
-        User newUser = new User(accountNumber, pin, 0.0); // Start with a balance of 0.0
+        User newUser = new User(accountNumber, pin, 0.0, null); // Start with a balance of 0.0
         newUser.saveToFile();
 
         System.out.println("Account created successfully. Account Number: " + accountNumber);
@@ -132,6 +133,7 @@ public class ATM {
 
 private void performBalanceInquiry() {
         System.out.println("Your current balance is: " + account.checkBalance());
+        System.out.println(account.checkSecureToken());
     }
 
     private void performDeposit() {
@@ -150,19 +152,35 @@ private void performBalanceInquiry() {
         }
     }
 
-    private void performPinChange() {
-        System.out.print("Enter old PIN: ");
-        int oldPin = scanner.nextInt();
-        System.out.print("Enter new PIN: ");
-        int newPin = scanner.nextInt();
-        System.out.print("Enter secure token: "); // You need to handle secure token
-        int secureToken = scanner.nextInt();
+private void performPinChange() {
+    System.out.print("Enter old PIN: ");
+    int oldPin = scanner.nextInt();
+    if (oldPin != account.checkPin()) {
+        System.out.println("Incorrect Pin");
+        return;
+        
+    }
+    System.out.print("Enter new PIN: ");
+    int newPin = scanner.nextInt();
+    if (oldPin == newPin){
+        System.out.println("Old pin and new pin cannot be the same.");
+        return;
+    }
+    System.out.print("Enter secure token: ");
+    int secureToken = scanner.nextInt();
 
-        if (account.changePin(oldPin, newPin, secureToken)) {
+    User currentUser = userMap.get(currentAccountNumber);
+    if (currentUser != null && currentUser.verifySecureToken(secureToken)) {
+        if (currentUser.getPin() == oldPin) { 
+            currentUser.setPin(newPin); // Update the PIN in the User object
+            currentUser.saveToFile(); // Save the User object to file
+            userMap.put(currentAccountNumber, currentUser); // Update the map with the new User object
             System.out.println("PIN changed successfully.");
         } else {
-            System.out.println("Failed to change PIN.");
+            System.out.println("Incorrect old PIN.");
         }
+    } else {
+        System.out.println("Invalid security code or user not found.");
     }
-
+}
 }
