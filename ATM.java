@@ -31,7 +31,7 @@ public class ATM {
             String fileAccountNumber = null;
             int filePin = 0;
             double balance = 0.0;
-            int secureToken = 0;
+            int securityCode = 0;
 
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(": ");
