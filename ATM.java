@@ -10,6 +10,8 @@ public class ATM {
     private Scanner scanner;
     private Account account; // This needs to be used after a successful login
     private Map<String, User> userMap; // To hold user data after login
+    private String currentAccountNumber; // New field to keep track of the logged-in user's account number
+
 
     public ATM() {
         this.scanner = new Scanner(System.in);
@@ -29,7 +31,7 @@ public class ATM {
             String fileAccountNumber = null;
             int filePin = 0;
             double balance = 0.0;
-            int securityCode = 0;
+            int secureToken = 0;
 
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(": ");
@@ -55,6 +57,7 @@ public class ATM {
                 User user = new User(accountNumber, pin, balance);
                 userMap.put(accountNumber, user);
                 System.out.println("Login successful.");
+                this.currentAccountNumber = accountNumber; // Store the logged-in user's account number
                 return true;
             } else {
                 System.out.println("Login failed. Incorrect account number or PIN.");
@@ -64,12 +67,6 @@ public class ATM {
             System.out.println("An error occurred while trying to login.");
             e.printStackTrace();
             return false;
-        }
-    }
-
-    public void start() {
-        if (login()) { // If login is successful, proceed to show the menu
-            showMenu();
         }
     }
 
@@ -90,13 +87,11 @@ public class ATM {
     }
 
 
-    private void showMenu() {
-        System.out.println("Please enter your account number: ");
-        String accountNumber = scanner.next();
-        User loggedInUser = userMap.get(accountNumber);
+    public void showMenu() {
+        User loggedInUser = userMap.get(currentAccountNumber);
 
         if (loggedInUser == null) {
-            System.out.println("Invalid account number or PIN.");
+            System.out.println("Login session expired or invalid.");
             return;
         }
         

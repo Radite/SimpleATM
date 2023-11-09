@@ -17,7 +17,7 @@ public class Main {
                 break;
             case 2:
                 if (atm.login()) {
-                    atm.start();
+                    atm.showMenu();
                 }
                 break;
             default:
